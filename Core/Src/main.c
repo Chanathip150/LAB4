@@ -60,6 +60,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 void Buttion();
+void Button0();
 void Buttion2() ;
 /* USER CODE END PFP */
 
@@ -107,26 +108,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(state == 1)
-	     	{
-	     		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-	     		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET)
-	     		{
-	     			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-	     			if(HAL_GetTick() - timestamp >= (1000+((22695477*ADCData[0])+ADCData[1])%1000) )
-	     				{
-	     					timestamp = HAL_GetTick() ;
-	     					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-	     					state = 2 ;
-	     				}
-	     		}
-	     	}
-	     	if(state == 2)
-	     	{
-	     		Buttion2();
-	     	}
 
-
+	  Buttion();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -344,13 +327,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_13)
 	{
-		Buttion();
+		Button0();
 	}
 }
-
+void Button0()
+{
+	 state = (state%1)+1  ;
+	 Buttion();
+}
 void Buttion()
 {
-    state = (state%1)+1  ;
+    if(state == 1)
+	{
+		//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_RESET)
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+		//	do{time2 = HAL_GetTick() - timestamp ;}while(time2>= (1000+((22695477*ADCData[0])+ADCData[1])%1000) );
+			if(HAL_GetTick() - timestamp >= (1000+((22695477*ADCData[0])+ADCData[1])%1000) )
+			{
+					timestamp = HAL_GetTick() ;
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+					timestamp2 = 0 ;
+			    state = 2 ;
+			}
+
+		}
+	}
+	if(state == 2)
+	{
+		Buttion2();
+	}
 }
 void Buttion2()
 {
@@ -366,8 +373,9 @@ void Buttion2()
 	}
 	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET)
 	{
+	 timestamp2 = timestamp2/1000 ;
+	 state = 0 ;
 
-		state = 0 ;
 	}
 }
 

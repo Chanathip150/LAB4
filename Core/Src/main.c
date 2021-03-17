@@ -49,7 +49,12 @@ UART_HandleTypeDef huart2;
 uint32_t ADCData[4] = {0}; //เ�?�?�?�?�?า�?�?ตัว�?�?ร
 uint32_t timestamp = 0 ;
 uint32_t timestamp2 = 0 ;
+uint32_t timestamp3 = 0 ;
+uint32_t timestamp4 = 0 ;
+uint32_t timesum = 0 ;
 int state = 0 ;
+int mode = 0 ;
+//GPIO_PinState Bluebutton[2] = 0 ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,6 +107,7 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start_DMA(&hadc1, ADCData, 4) ;
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,7 +115,17 @@ int main(void)
   while (1)
   {
 
-	  Buttion();
+	  if(mode == 1){
+		 if(HAL_GetTick() - timestamp >= timestamp2)
+			{
+				timestamp3 = HAL_GetTick() ;
+				state = 1 ;
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+				mode = 0 ;
+			}
+
+
+	 }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -304,7 +320,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
@@ -327,7 +343,31 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_13)
 	{
-		Button0();
+	  //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+//	  timestamp = HAL_GetTick();
+//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+	  switch (state) {
+		case 1:
+			timestamp4 = HAL_GetTick();
+			timesum = timestamp4 - timestamp3 ;
+			mode = 0 ;
+			state = 0 ;
+			break;
+		case 2:
+			 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+			 mode = 0 ;
+			 state = 0 ;
+
+			break;
+		default:
+			 timestamp = HAL_GetTick();
+			 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+			 timestamp2 = 1000+((22695477*ADCData[0])+ADCData[1])%1000 ;
+			 mode = 1 ;
+			 state = 2 ;
+			 break;
+	  	  }
+
 	}
 }
 void Button0()
@@ -361,6 +401,15 @@ void Buttion()
 }
 void Buttion2()
 {
+	if( HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_5) == GPIO_PIN_SET )
+		{
+		if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET)
+		{
+			timestamp2 = HAL_GetTick() - timestamp ;
+			state = 0 ;
+		}
+		}
+	/*
 	uint32_t time1 = 0 ;
 	if( HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_5) == GPIO_PIN_SET )
 	{
@@ -376,7 +425,7 @@ void Buttion2()
 	 timestamp2 = timestamp2/1000 ;
 	 state = 0 ;
 
-	}
+	}*/
 }
 
 /* USER CODE END 4 */
